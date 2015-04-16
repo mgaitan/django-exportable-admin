@@ -44,7 +44,12 @@ class ExportableAdmin(admin.ModelAdmin):
         These will be used in the customized changelist template to output a
         button for each export format.
         """
-        app, mod = self.model._meta.app_label, self.model._meta.module_name
+        app = self.model._meta.app_label
+        try:
+            mod = self.model._meta.module_name
+        except AttributeError:
+            mod = self.model._meta.model_name
+
         return (
             ('Export as %s' % format_name,
              reverse("admin:%s_%s_export_%s" % (app, mod, format_name.lower())))
@@ -83,7 +88,10 @@ class ExportableAdmin(admin.ModelAdmin):
         which actually generates the "CSV".
         """
         urls = super(ExportableAdmin, self).get_urls()
-        app, mod = self.model._meta.app_label, self.model._meta.module_name
+        try:
+            mod = self.model._meta.module_name
+        except AttributeError:
+            mod = self.model._meta.model_name
         # make a URL pattern for each export format
         new_urls = [
             url(
