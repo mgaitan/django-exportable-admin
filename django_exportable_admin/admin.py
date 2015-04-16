@@ -88,6 +88,7 @@ class ExportableAdmin(admin.ModelAdmin):
         which actually generates the "CSV".
         """
         urls = super(ExportableAdmin, self).get_urls()
+        app = self.model._meta.app_label
         try:
             mod = self.model._meta.module_name
         except AttributeError:
