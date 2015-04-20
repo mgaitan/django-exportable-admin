@@ -46,7 +46,7 @@ class ExportableAdmin(admin.ModelAdmin):
         """
         app = self.model._meta.app_label
         try:
-            mod = self.model._meta.module_name
+            mod = self.model._meta.model_name
         except AttributeError:
             mod = self.model._meta.model_name
 
@@ -90,7 +90,7 @@ class ExportableAdmin(admin.ModelAdmin):
         urls = super(ExportableAdmin, self).get_urls()
         app = self.model._meta.app_label
         try:
-            mod = self.model._meta.module_name
+            mod = self.model._meta.model_name
         except AttributeError:
             mod = self.model._meta.model_name
         # make a URL pattern for each export format
