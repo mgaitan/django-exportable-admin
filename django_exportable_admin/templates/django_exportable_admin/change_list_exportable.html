@@ -11,11 +11,9 @@
   {% else %}
     {% block object-tools %}
       <ul class="object-tools">
-        {% block object-tools-items %}
-          {% for text, export_url in export_buttons %}
-          <li><a href="{{ export_url }}" class="addlink">{{ text }}</a></li>
-          {% endfor %}
-        {% endblock %}
+        {% for text, export_url in export_buttons %}
+        <li><a href="{{ export_url }}" class="addlink">{{ text }}</a></li>
+        {% endfor %}
       </ul>
     {% endblock %}
   {% endif %}
