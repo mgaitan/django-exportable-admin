@@ -1,7 +1,8 @@
-from django.contrib import admin
 from django.conf.urls import patterns, url
-from django.template.defaultfilters import slugify
+from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.template.defaultfilters import slugify
+from django.utils.encoding import iri_to_uri
 
 
 class ExportableAdmin(admin.ModelAdmin):
@@ -27,14 +28,16 @@ class ExportableAdmin(admin.ModelAdmin):
         (u'Tab Delimited', u'\t'),
     )
 
-    def get_paginator(self, request, queryset, per_page, orphans=0, allow_empty_first_page=True):
+    def get_paginator(self, request, queryset, per_page, orphans=0,
+                      allow_empty_first_page=True):
         """
         When we are exporting, modify the paginator to set the result limit to
         'export_queryset_limit'.
         """
         if hasattr(request, 'is_export_request'):
             return self.paginator(queryset, self.export_queryset_limit, 0, True)
-        return self.paginator(queryset, per_page, orphans, allow_empty_first_page)
+        return self.paginator(
+            queryset, per_page, orphans, allow_empty_first_page)
 
     def get_export_buttons(self, request):
         """
@@ -46,14 +49,19 @@ class ExportableAdmin(admin.ModelAdmin):
         """
         app = self.model._meta.app_label
         try:
-            mod = self.model._meta.model_name
+            mod = self.model._meta.module_name
         except AttributeError:
             mod = self.model._meta.model_name
 
         return (
-            ('Export as %s' % format_name,
-             reverse("admin:%s_%s_export_%s" % (app, mod, format_name.lower())))
-             for format_name, delimiter in self.export_formats
+            (
+                'Export as %s' % format_name,
+                '%s%s' % (
+                    reverse("admin:%s_%s_export_%s" % (
+                        app, mod, format_name.lower())),
+                    ('?' + iri_to_uri(request.META.get('QUERY_STRING', '')))
+                    if request.META.get('QUERY_STRING', '') else '')
+             ) for format_name, delimiter in self.export_formats
         )
 
     def changelist_view(self, request, extra_context=None):
@@ -69,7 +77,8 @@ class ExportableAdmin(admin.ModelAdmin):
             response = super(ExportableAdmin, self).changelist_view(
                 request, extra_context)
             # response is a TemplateResponse so we can change the template
-            response.template_name = 'django_exportable_admin/change_list_csv.html'
+            response.template_name = \
+                'django_exportable_admin/change_list_csv.html'
             response['Content-Type'] = 'text/csv'
             response['Content-Disposition'] = \
                 'attachment; filename={0}.csv'.format(
@@ -77,9 +86,10 @@ class ExportableAdmin(admin.ModelAdmin):
             return response
         extra_context = extra_context or {}
         extra_context.update({
-            'export_buttons' : self.get_export_buttons(request),
+            'export_buttons': self.get_export_buttons(request),
         })
-        return super(ExportableAdmin, self).changelist_view(request, extra_context)
+        return super(ExportableAdmin, self).changelist_view(
+            request, extra_context)
 
     def get_urls(self):
         """
@@ -99,12 +109,13 @@ class ExportableAdmin(admin.ModelAdmin):
                 r'^export/%s$' % format_name.lower(),
                 self.admin_site.admin_view(self.changelist_view),
                 name="%s_%s_export_%s" % (app, mod, format_name.lower()),
-                kwargs={'extra_context':{'export_delimiter':delimiter}},
+                kwargs={'extra_context': {'export_delimiter': delimiter}},
             )
             for format_name, delimiter in self.export_formats
         ]
         my_urls = patterns('', *new_urls)
         return my_urls + urls
+
 
 class CSVExportableAdmin(ExportableAdmin):
     """
@@ -117,6 +128,7 @@ class CSVExportableAdmin(ExportableAdmin):
         (u'CSV', u','),
     )
 
+
 class PipeExportableAdmin(ExportableAdmin):
     """
     ExportableAdmin subclass which adds export to Pipe functionality.
@@ -127,6 +139,7 @@ class PipeExportableAdmin(ExportableAdmin):
     export_formats = (
         (u'Pipe', u'|'),
     )
+
 
 class MultiExportableAdmin(ExportableAdmin):
     """
