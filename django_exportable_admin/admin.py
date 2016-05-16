@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.utils import lookup_field, label_for_field
 from django.core.exceptions import ObjectDoesNotExist
@@ -137,7 +137,7 @@ class ExportableAdmin(admin.ModelAdmin):
         except AttributeError:
             mod = self.model._meta.model_name
         # make a URL pattern for each export format
-        new_urls = [
+        return [
             url(
                 r'^export/%s$' % format_name.lower(),
                 self.admin_site.admin_view(self.export_changelist_view),
@@ -145,9 +145,7 @@ class ExportableAdmin(admin.ModelAdmin):
                 kwargs={'extra_context': {'export_delimiter': delimiter}},
             )
             for format_name, delimiter in self.export_formats
-        ]
-        my_urls = patterns('', *new_urls)
-        return my_urls + urls
+        ] + urls
 
 
 class CSVExportableAdmin(ExportableAdmin):
