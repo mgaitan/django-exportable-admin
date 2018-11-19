@@ -1,5 +1,6 @@
 import codecs
-import cStringIO
+from io import StringIO
+from django.utils.encoding import smart_text
 import csv
 
 
@@ -20,19 +21,18 @@ class UnicodeWriter(object):
 
     def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
         # Redirect output to a queue
-        self.queue = cStringIO.StringIO()
+        self.queue = StringIO()
         self.writer = csv.DictWriter(self.queue, dialect=dialect, **kwds)
         self.stream = f
         self.encoder = codecs.getincrementalencoder(encoding)()
         self.writer.writeheader()
 
     def writerow(self, row):
-        self.writer.writerow({k: unicode(s).encode("utf-8")
+        self.writer.writerow({k: smart_text(s)
                               for k, s in row.items()})
         # Fetch UTF-8 output from the queue ...
         data = self.queue.getvalue()
-        data = data.decode("utf-8")
-        # ... and reencode it into the target encoding
+        # reencode it into the target encoding
         data = self.encoder.encode(data)
         # write to the target stream
         res = self.stream.write(data)

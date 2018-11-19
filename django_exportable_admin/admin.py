@@ -4,7 +4,12 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.utils import lookup_field, label_for_field
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import reverse
+
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+
 from django.http import StreamingHttpResponse
 from django.utils import six
 from django.utils.encoding import iri_to_uri
